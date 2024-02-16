@@ -118,6 +118,7 @@ func testTrim(t *testing.T, trim func(float64, int) float64, decimalsType trimDe
 
 			if trimmed != _trimmed {
 				t.Error("places", places, "origin", strconv.FormatFloat(origin, 'f', -1, 64), origin, "trimmed", strconv.FormatFloat(trimmed, 'f', -1, 64), trimmed, "_trimmed", strconv.FormatFloat(_trimmed, 'f', -1, 64))
+				failTimes++
 			}
 		}
 	}
