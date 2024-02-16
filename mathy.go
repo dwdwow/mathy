@@ -1,6 +1,13 @@
 package mathy
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
+
+// ======================================================
+// Trim decimals
+// ------------------------------------------------------
 
 type trimDecimalsType int
 
@@ -61,3 +68,28 @@ func trimDecimals(input float64, places int, trimType trimDecimalsType) (trimmed
 	// Finally we do the math to actually create a rounded number
 	return trimmed / precision * sign, false
 }
+
+// ------------------------------------------------------
+// Trim decimals
+// ======================================================
+
+// ======================================================
+// Random
+// ------------------------------------------------------
+
+// RandFloat returns a float in the half-open interval [min, max)
+func RandFloat(min, max float64) float64 {
+	return min + rand.Float64()*(max-min)
+}
+
+func RandFloats(min, max float64, n int) []float64 {
+	var res []float64
+	for i := 0; i < n; i++ {
+		res = append(res, RandFloat(min, max))
+	}
+	return res
+}
+
+// ------------------------------------------------------
+// Random
+// ======================================================
