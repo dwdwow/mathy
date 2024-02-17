@@ -51,7 +51,7 @@ func testTrim(t *testing.T, trim func(float64, int32) float64, decimalsType trim
 	times := 10_000_000
 	groupNum := 100_000
 	groups := times / groupNum
-	placesSection := 60
+	placesSection := 100
 	var placesList []int32
 	for i := -placesSection; i <= placesSection; i++ {
 		placesList = append(placesList, int32(i))
@@ -84,14 +84,16 @@ func testTrim(t *testing.T, trim func(float64, int32) float64, decimalsType trim
 			pointShiftedIndex := pointIndex + int(places)
 
 			sorigin = strings.ReplaceAll(sorigin, ".", "")
-			shiftedIntegers := sorigin[:pointShiftedIndex]
+			_strimmed := sorigin[:pointShiftedIndex]
 
-			_trimmed, err := strconv.ParseFloat(shiftedIntegers, 64)
-			if err != nil {
-				t.Error("places", places, "parse shiftedIntegers", "err", err, "origin", origin, "trimmed", trimmed, "_trimmed", _trimmed)
-				t.FailNow()
-			}
+			//_trimmed, err := strconv.ParseFloat(shiftedIntegers, 64)
+			//_trimmedFirstParseRes := _trimmed
+			//if err != nil {
+			//	t.Error("places", places, "parse shiftedIntegers", "err", err, "origin", origin, "trimmed", trimmed, "_trimmed", _trimmed)
+			//	t.FailNow()
+			//}
 
+			var add1 bool
 			switch {
 			case (decimalsType == trimTypeCeil) && sign > 0,
 				(decimalsType == trimTypeFloor) && sign < 0,
@@ -99,16 +101,18 @@ func testTrim(t *testing.T, trim func(float64, int32) float64, decimalsType trim
 				shiftedDecimals := sorigin[pointShiftedIndex:]
 				no0decimals := strings.ReplaceAll(shiftedDecimals, "0", "")
 				if len(no0decimals) != 0 {
-					_trimmed++
+					add1 = true
+					_strimmed = BN(_strimmed).Add(Int(1)).String()
 				}
 			case decimalsType == trimTypeRound:
 				switch sorigin[pointShiftedIndex] {
 				case '5', '6', '7', '8', '9':
-					_trimmed++
+					add1 = true
+					_strimmed = BN(_strimmed).Add(Int(1)).String()
 				}
 			}
 
-			_strimmed := strconv.FormatFloat(_trimmed, 'f', -1, 64)
+			//_strimmed := strconv.FormatFloat(_trimmed, 'f', -1, 64)
 
 			if places < 0 {
 				_strimmed += strings.Repeat("0", int(-places))
@@ -116,24 +120,53 @@ func testTrim(t *testing.T, trim func(float64, int32) float64, decimalsType trim
 				_sceiledList := strings.Split(_strimmed, "")
 				_sceiledList = slices.Insert(_sceiledList, len(_sceiledList)-int(places), ".")
 				_strimmed = strings.Join(_sceiledList, "")
+				_strimmed = strings.TrimRight(_strimmed, "0")
+			}
+			_strimmed = strings.TrimLeft(_strimmed, "0")
+
+			if _strimmed == "" {
+				_strimmed = "0"
 			}
 
-			_trimmed, err = strconv.ParseFloat(_strimmed, 64)
-			if err != nil {
-				t.Error("places", places, "parse _strimmed", "err", err, "origin", origin, "trimmed", trimmed, "_trimmed", _trimmed)
-				t.FailNow()
+			if _strimmed[0] == '.' {
+				_strimmed = "0" + _strimmed
 			}
 
-			_trimmed *= sign
+			//_trimmed, err = strconv.ParseFloat(_strimmed, 64)
+			//if err != nil {
+			//	t.Error("places", places, "parse _strimmed", "err", err, "origin", origin, "trimmed", trimmed, "_trimmed", _trimmed)
+			//	t.FailNow()
+			//}
 
-			if trimmed != _trimmed {
-				t.Error("places", places, "origin", strconv.FormatFloat(origin, 'f', -1, 64), origin, "trimmed", strconv.FormatFloat(trimmed, 'f', -1, 64), trimmed, "_trimmed", strconv.FormatFloat(_trimmed, 'f', -1, 64))
+			if sign < 0 && _strimmed != "0" {
+				_strimmed = "-" + _strimmed
+			}
+
+			if _strimmed[len(_strimmed)-1] == '.' {
+				_strimmed = _strimmed[:len(_strimmed)-1]
+			}
+
+			//_trimmed *= sign
+
+			if BN(trimmed).String() != _strimmed {
+				t.Error("type", decimalsType,
+					"places", places,
+					"origin", strconv.FormatFloat(origin, 'f', -1, 64), origin,
+					"trimmed", strconv.FormatFloat(trimmed, 'f', -1, 64), trimmed,
+					"add1", add1,
+					//"_trimmedFirstParsed", _trimmedFirstParseRes,
+					//"integers", shiftedIntegers,
+					"_strimmed", _strimmed,
+					//"_trimmed", strconv.FormatFloat(_trimmed, 'f', -1, 64),
+					"keynum", string(sorigin[pointShiftedIndex]),
+					"sorigin", sorigin,
+				)
 				t.FailNow()
 			}
 
 			j := i + 1
 			if j%groupNum == 0 {
-				t.Log("places", places, "group", j/groupNum, "/", groups, "tested", j)
+				t.Log("type", decimalsType, "places", places, "group", j/groupNum, "/", groups, "tested", j)
 			}
 		}
 	}
