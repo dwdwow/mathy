@@ -14,7 +14,6 @@ func init() {
 
 type BigBaseNumber interface {
 	uint64 | int64 | float64 | string
-	//*Big[uint64] | *Big[int64] | *Big[float64] | *Big[string]
 }
 
 // Big is a wrapper of github.com/shopspring/decimal,
@@ -216,4 +215,18 @@ func (b *Big) BigIntInfinity() *big.Int {
 
 func (b *Big) BigIntZero() *big.Int {
 	return b.d.RoundDown(0).BigInt()
+}
+
+func MaxBN(x, y *Big) *Big {
+	if x.Gte(y) {
+		return x
+	}
+	return y
+}
+
+func MinBN(x, y *Big) *Big {
+	if x.Lte(y) {
+		return x
+	}
+	return y
 }
