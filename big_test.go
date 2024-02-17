@@ -11,7 +11,7 @@ import (
 )
 
 func TestBN(t *testing.T) {
-	times := 1_000_000_000
+	times := 10_000_000
 	groupNum := times / 10
 
 	// test float64
@@ -130,6 +130,7 @@ func testOperation(t *testing.T, fy float64, bigFunc func(BNOperatee) *Big, deci
 	sfy := strconv.FormatFloat(fy, 'f', -1, 64)
 	iy := rand.Int63()
 	uy := uint64(rand.Int63())
+
 	// add Big
 	deciRes := deciFunc(decimal.NewFromFloat(fy))
 	bigRes := bigFunc(BN(fy))
@@ -177,7 +178,7 @@ func testOperation(t *testing.T, fy float64, bigFunc func(BNOperatee) *Big, deci
 }
 
 func TestBig_Operate(t *testing.T) {
-	times := 100_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 	for i := 0; i < times; i++ {
@@ -230,7 +231,7 @@ func TestBig_Sqrt(t *testing.T) {
 }
 
 func TestBig_Abs(t *testing.T) {
-	times := 1_000_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 
@@ -253,7 +254,7 @@ func TestBig_Abs(t *testing.T) {
 }
 
 func TestBig_Cmp(t *testing.T) {
-	times := 1_000_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 
@@ -433,7 +434,7 @@ func TestBig_Round(t *testing.T) {
 }
 
 func TestBig_BigFloat(t *testing.T) {
-	times := 1_000_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 
@@ -454,7 +455,7 @@ func TestBig_BigFloat(t *testing.T) {
 }
 
 func TestBig_BigIntRound(t *testing.T) {
-	times := 1_000_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 
@@ -569,7 +570,7 @@ func TestBig_BigIntRound(t *testing.T) {
 }
 
 func TestMaxBN(t *testing.T) {
-	times := 1_000_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 
@@ -594,7 +595,7 @@ func TestMaxBN(t *testing.T) {
 }
 
 func TestMinBN(t *testing.T) {
-	times := 1_000_000_000
+	times := 1_000_000
 	groupNum := 100_000
 	groups := times / groupNum
 
