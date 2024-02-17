@@ -17,7 +17,7 @@ var (
 )
 
 type BigBaseNumber interface {
-	uint64 | int64 | float64 | string
+	uint64 | int64 | int | float64 | string
 }
 
 // Big is a wrapper of github.com/shopspring/decimal,
@@ -119,12 +119,17 @@ func (b *Big) Div(n BNOperatee) *Big {
 	return b.operateBig(n, b.d.Div)
 }
 
-// Pow
-// n must bigger or equal than 1
+// Pow input n must be integer, can be positive or negative
+// if n is not integer, will panic
 func (b *Big) Pow(n BNOperatee) *Big {
-	return b.operateBig(n, b.d.Pow)
+	bn := n.BN()
+	if !bn.d.IsInteger() {
+		panic("mathy: Big.Pow input is not integer")
+	}
+	return &Big{d: b.d.Pow(bn.d)}
 }
 
+// Sqrt is based on big.Float, is not precise
 func (b *Big) Sqrt() *Big {
 	bf := new(big.Float).
 		SetPrec(512).

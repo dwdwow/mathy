@@ -617,3 +617,157 @@ func TestMinBN(t *testing.T) {
 		}
 	}
 }
+
+func TestBigWithPreciseData(t *testing.T) {
+	// Pow
+	if !BN(2.0).Pow(Int(3)).Equal(Int(8)) {
+		t.Error("2**2 != 8")
+		t.FailNow()
+	}
+	if !BN(2.0).Pow(Int(-2)).Equal(Float(0.25)) {
+		t.Error("2**-2 != 0.25")
+		t.FailNow()
+	}
+	// 23.425**4.7, 412.6326**2, 2143.0034**-2.1
+	powData := [][]float64{
+		{23.425, 4, 301105.29881289066},
+		{412.6326, 2, 170265.66258276},
+		{2143.0034, -2, 2.1774805270254708e-07},
+	}
+	for _, data := range powData {
+		if BN(data[0]).Pow(Float(data[1])).Div(Float(data[2])).Sub(Int(1)).Abs().Gt(Float(0.000000000001)) {
+			t.Error("Pow", BN(data[0]).Pow(Float(data[1])), data[2])
+			t.FailNow()
+		}
+	}
+
+	// Sqrt
+	if !BN(4.0).Sqrt().Equal(Int(2)) {
+		t.Error("4**0.5 != 2")
+		t.FailNow()
+	}
+	if !BN(9.0).Sqrt().Equal(Int(3)) {
+		t.Error("9**0.5 != 3")
+		t.FailNow()
+	}
+	sqrtData := [][]string{
+		{"4321.198642", "65.73582464683926"},
+		{"15142.1251255231", "123.05334260199152"},
+		{"12343451.123", "3513.324796115497"},
+	}
+	for _, data := range sqrtData {
+		if BN(data[0]).Sqrt().Div(String(data[1])).Sub(Int(1)).Abs().Gt(Float(0.000000000000001)) {
+			t.Error("Sqrt", BN(data[0]).Sqrt(), data[1])
+			t.FailNow()
+		}
+	}
+
+	// Abs
+	if !BN(-2315125.1286).Abs().Equal(Float(2315125.1286)) {
+		t.Error("Abs", "Abs(-2315125.1286) != 2315125.1286")
+		t.FailNow()
+	}
+
+	if !BN(2315125.1286).Abs().Equal(Float(2315125.1286)) {
+		t.Error("Abs", "Abs(2315125.1286) != 2315125.1286")
+		t.FailNow()
+	}
+
+	if BN(3124.31245364).Abs().Equal(Float(-23.6435)) {
+		t.Error("Abs", "Abs(3124.31245364) != -23.6435")
+		t.FailNow()
+	}
+
+	// Equal
+	if !BN(-1234.2135).Equal(Float(-1234.2135)) {
+		t.Error("Equal", "-1234.2135 != -1234.2135")
+		t.FailNow()
+	}
+
+	if BN(1234.2135).Equal(Float(-1234.2135)) {
+		t.Error("Equal", "1234.2135 != -1234.2135")
+		t.FailNow()
+	}
+
+	// Round
+	roundData := [][]float64{
+		{0.5, 0, 1},
+		{1, 0, 1},
+		{1432.4321, 2, 1432.43},
+		{143245.21357, 4, 143245.2136},
+		{125.15, -1, 130},
+	}
+	for _, data := range roundData {
+		if !BN(data[0]).Round(int32(data[1])).Equal(Float(data[2])) {
+			t.Error("Round", data)
+			t.FailNow()
+		}
+	}
+
+	// Ceil
+	ceilData := [][]float64{
+		{0.05, 2, 0.05},
+		{-0.1, 1, -0.1},
+		{1.37, 1, 1.4},
+		{-1.37, 1, -1.3},
+	}
+	for _, data := range ceilData {
+		if !BN(data[0]).RoundCeil(int32(data[1])).Equal(Float(data[2])) {
+			t.Error("Ceil", data)
+			t.FailNow()
+		}
+	}
+
+	// Floor
+	floorData := [][]float64{
+		{0.05, 2, 0.05},
+		{-0.1, 1, -0.1},
+		{1.37, 1, 1.3},
+		{-1.37, 1, -1.4},
+	}
+	for _, data := range floorData {
+		if !BN(data[0]).RoundFloor(int32(data[1])).Equal(Float(data[2])) {
+			t.Error("Floor", data)
+			t.FailNow()
+		}
+	}
+
+	// infinity
+	infinityData := [][]float64{
+		{0.05, 2, 0.05},
+		{-0.1, 1, -0.1},
+		{1.37, 1, 1.4},
+		{-1.37, 1, -1.4},
+	}
+	for _, data := range infinityData {
+		if !BN(data[0]).RoundInfinity(int32(data[1])).Equal(Float(data[2])) {
+			t.Error("Infinity", data)
+			t.FailNow()
+		}
+	}
+
+	// zero
+	zeroData := [][]float64{
+		{0.05, 2, 0.05},
+		{-0.1, 1, -0.1},
+		{1.37, 1, 1.3},
+		{-1.37, 1, -1.3},
+	}
+	for _, data := range zeroData {
+		if !BN(data[0]).RoundZero(int32(data[1])).Equal(Float(data[2])) {
+			t.Error("Zero", data)
+			t.FailNow()
+		}
+	}
+
+	// Gte, Lte
+	if !BN(0.01).Gte(Float(0.01)) {
+		t.Error("Gte", 0.01)
+		t.FailNow()
+	}
+	if !BN(0.01).Lte(Float(0.01)) {
+		t.Error("Lte", 0.01)
+		t.FailNow()
+	}
+
+}
