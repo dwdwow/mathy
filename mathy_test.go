@@ -1,7 +1,6 @@
 package mathy
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -38,17 +37,27 @@ func TestRandFloats(t *testing.T) {
 	}
 }
 
-func testTrim(t *testing.T, trim func(float64, int) float64, decimalsType trimDecimalsType) {
-	loopTimes := 100_000_000
-	placesSection := 6
-	totalTimes := float64(loopTimes) * float64(placesSection*2+1)
-	failTimes := 0.0
-	var placesList []int
+type trimDecimalsType int
+
+const (
+	trimTypeRound trimDecimalsType = iota
+	trimTypeCeil
+	trimTypeFloor
+	trimTypeInfinity
+	trimTypeZero
+)
+
+func testTrim(t *testing.T, trim func(float64, int32) float64, decimalsType trimDecimalsType) {
+	times := 10_000_000
+	groupNum := 100_000
+	groups := times / groupNum
+	placesSection := 60
+	var placesList []int32
 	for i := -placesSection; i <= placesSection; i++ {
-		placesList = append(placesList, i)
+		placesList = append(placesList, int32(i))
 	}
 	for _, places := range placesList {
-		for i := 0; i < loopTimes; i++ {
+		for i := 0; i < times; i++ {
 			origin := RandFloat(-100_000_000, 100_000_000)
 			trimmed := trim(origin, places)
 
@@ -72,7 +81,7 @@ func testTrim(t *testing.T, trim func(float64, int) float64, decimalsType trimDe
 
 			pointIndex := strings.IndexByte(sorigin, '.')
 
-			pointShiftedIndex := pointIndex + places
+			pointShiftedIndex := pointIndex + int(places)
 
 			sorigin = strings.ReplaceAll(sorigin, ".", "")
 			shiftedIntegers := sorigin[:pointShiftedIndex]
@@ -84,27 +93,28 @@ func testTrim(t *testing.T, trim func(float64, int) float64, decimalsType trimDe
 			}
 
 			switch {
-			case (decimalsType == trimDecimalsTypeCeil) && sign > 0,
-				(decimalsType == trimDecimalsTypeFloor) && sign < 0:
+			case (decimalsType == trimTypeCeil) && sign > 0,
+				(decimalsType == trimTypeFloor) && sign < 0,
+				decimalsType == trimTypeInfinity:
 				shiftedDecimals := sorigin[pointShiftedIndex:]
 				no0decimals := strings.ReplaceAll(shiftedDecimals, "0", "")
 				if len(no0decimals) != 0 {
-					_trimmed += 1
+					_trimmed++
 				}
-			case decimalsType == trimDecimalsTypeRound:
+			case decimalsType == trimTypeRound:
 				switch sorigin[pointShiftedIndex] {
 				case '5', '6', '7', '8', '9':
-					_trimmed += 1
+					_trimmed++
 				}
 			}
 
 			_strimmed := strconv.FormatFloat(_trimmed, 'f', -1, 64)
 
 			if places < 0 {
-				_strimmed += strings.Repeat("0", -places)
+				_strimmed += strings.Repeat("0", int(-places))
 			} else if places > 0 {
 				_sceiledList := strings.Split(_strimmed, "")
-				_sceiledList = slices.Insert(_sceiledList, len(_sceiledList)-places, ".")
+				_sceiledList = slices.Insert(_sceiledList, len(_sceiledList)-int(places), ".")
 				_strimmed = strings.Join(_sceiledList, "")
 			}
 
@@ -118,21 +128,33 @@ func testTrim(t *testing.T, trim func(float64, int) float64, decimalsType trimDe
 
 			if trimmed != _trimmed {
 				t.Error("places", places, "origin", strconv.FormatFloat(origin, 'f', -1, 64), origin, "trimmed", strconv.FormatFloat(trimmed, 'f', -1, 64), trimmed, "_trimmed", strconv.FormatFloat(_trimmed, 'f', -1, 64))
-				failTimes++
+				t.FailNow()
+			}
+
+			j := i + 1
+			if j%groupNum == 0 {
+				t.Log("places", places, "group", j/groupNum, "/", groups, "tested", j)
 			}
 		}
 	}
-	fmt.Println("fail rate", failTimes/totalTimes)
 }
 
 func TestRound(t *testing.T) {
-	testTrim(t, Round, trimDecimalsTypeRound)
+	testTrim(t, Round, trimTypeRound)
 }
 
-func TestCeil(t *testing.T) {
-	testTrim(t, Ceil, trimDecimalsTypeCeil)
+func TestRoundCeil(t *testing.T) {
+	testTrim(t, RoundCeil, trimTypeCeil)
 }
 
-func TestFloor(t *testing.T) {
-	testTrim(t, Floor, trimDecimalsTypeFloor)
+func TestRoundFloor(t *testing.T) {
+	testTrim(t, RoundFloor, trimTypeFloor)
+}
+
+func TestRoundInfinity(t *testing.T) {
+	testTrim(t, RoundInfinity, trimTypeInfinity)
+}
+
+func TestRoundZero(t *testing.T) {
+	testTrim(t, RoundZero, trimTypeZero)
 }
