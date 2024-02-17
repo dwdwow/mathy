@@ -4,26 +4,26 @@ type BNOperatee interface {
 	BN() *Big
 }
 
-type OperateeFloat64 float64
+type Float float64
 
-func (f OperateeFloat64) BN() *Big {
+func (f Float) BN() *Big {
 	return newBNWithFloat64(float64(f))
 }
 
-type OperateeInt64 int64
+type Int int64
 
-func (i OperateeInt64) BN() *Big {
+func (i Int) BN() *Big {
 	return newBNWithInt64(int64(i))
 }
 
-type OperateeString string
+type String string
 
-func (s OperateeString) BN() *Big {
+func (s String) BN() *Big {
 	return newBNWithStrIgnoreErr(string(s))
 }
 
-type OperateeUint64 uint64
+type Uint uint64
 
-func (u OperateeUint64) BN() *Big {
+func (u Uint) BN() *Big {
 	return newBNWithUint64(uint64(u))
 }

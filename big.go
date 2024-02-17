@@ -12,6 +12,10 @@ func init() {
 	decimal.DivisionPrecision = 100
 }
 
+var (
+	BN0 = newBNWithInt64(0)
+)
+
 type BigBaseNumber interface {
 	uint64 | int64 | float64 | string
 }
@@ -84,9 +88,6 @@ func newBNWithUint64(n uint64) *Big {
 }
 
 func (b *Big) BN() *Big {
-	if b == nil {
-		return &Big{d: decimal.NewFromInt(0)}
-	}
 	return b
 }
 
@@ -99,9 +100,6 @@ func (b *Big) copy() *Big {
 }
 
 func (b *Big) operateBig(n BNOperatee, f func(decimal.Decimal) decimal.Decimal) *Big {
-	if n == nil {
-		return b.copy()
-	}
 	return &Big{d: f(n.BN().d)}
 }
 
@@ -121,8 +119,23 @@ func (b *Big) Div(n BNOperatee) *Big {
 	return b.operateBig(n, b.d.Div)
 }
 
+// Pow
+// n must bigger or equal than 1
 func (b *Big) Pow(n BNOperatee) *Big {
 	return b.operateBig(n, b.d.Pow)
+}
+
+func (b *Big) Sqrt() *Big {
+	bf := new(big.Float).
+		SetPrec(512).
+		Sqrt(b.d.BigFloat()).
+		Text('f', -1)
+	d := newDecimalWithStrIgnoreErr(bf)
+	return &Big{d: d}
+}
+
+func (b *Big) Abs() *Big {
+	return &Big{d: b.d.Abs()}
 }
 
 func (b *Big) Cmp(n BNOperatee) int {
@@ -170,6 +183,9 @@ func (b *Big) RoundZero(places int32) *Big {
 }
 
 func (b *Big) String() string {
+	if b == nil {
+		return ""
+	}
 	return b.d.String()
 }
 
@@ -178,27 +194,19 @@ func (b *Big) Float64() float64 {
 	return f
 }
 
-func (b *Big) Sqrt() *Big {
-	bf := new(big.Float).
-		SetPrec(512).
-		Sqrt(b.d.BigFloat()).
-		Text('f', -1)
-	d := newDecimalWithStrIgnoreErr(bf)
-	return &Big{d: d}
-}
-
-func (b *Big) Abs() *Big {
-	return &Big{d: b.d.Abs()}
-}
-
 // BigFloat returns decimal as BigFloat.
 // Be aware that casting decimal to BigFloat might cause a loss of precision.
 func (b *Big) BigFloat() *big.Float {
 	return b.d.BigFloat()
 }
 
-func (b *Big) BigIntRound() *big.Int {
+// BigInt returns integer component of the decimal as a BigInt.
+func (b *Big) BigInt() *big.Int {
 	return b.d.BigInt()
+}
+
+func (b *Big) BigIntRound() *big.Int {
+	return b.d.Round(0).BigInt()
 }
 
 func (b *Big) BigIntCeil() *big.Int {
