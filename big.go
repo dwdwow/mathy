@@ -38,8 +38,12 @@ func newBN[N BigBaseNumber](n N) *Big {
 		return newBNWithStrIgnoreErr(n)
 	case int64:
 		return newBNWithInt64(n)
+	case int:
+		return newBNWithInt64(int64(n))
 	case uint64:
 		return newBNWithUint64(n)
+	case uint:
+		return newBNWithUint64(uint64(n))
 	default:
 		return nil
 	}
