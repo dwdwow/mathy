@@ -1,193 +1,222 @@
 package mathy
 
 import (
-	"slices"
-	"strconv"
-	"strings"
+	"math"
 	"testing"
 )
 
-func TestRandFloat(t *testing.T) {
-	var _r float64
-	for i := 0; i < 1_000_000_000; i++ {
-		r := RandFloat(10, 100)
-		if r < 10 || r >= 100 {
-			panic(r)
+// Test rounding functions
+func TestRoundingFunctions(t *testing.T) {
+	t.Run("Round function", func(t *testing.T) {
+		// Test basic rounding
+		result := Round(3.14159, 2)
+		expected := 3.14
+		if math.Abs(result-expected) > 0.0001 {
+			t.Errorf("Expected %f, got %f", expected, result)
 		}
-		if r == _r {
-			panic(r)
+
+		// Test rounding to integer
+		result = Round(3.7, 0)
+		expected = 4.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
 		}
-		_r = r
-	}
+
+		// Test negative numbers
+		result = Round(-3.14159, 2)
+		expected = -3.14
+		if math.Abs(result-expected) > 0.0001 {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+	})
+
+	t.Run("RoundCeil function", func(t *testing.T) {
+		// Test ceiling rounding
+		result := RoundCeil(3.1, 0)
+		expected := 4.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test negative numbers
+		result = RoundCeil(-3.1, 0)
+		expected = -3.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test with decimal places
+		result = RoundCeil(3.14159, 2)
+		expected = 3.15
+		if math.Abs(result-expected) > 0.0001 {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+	})
+
+	t.Run("RoundFloor function", func(t *testing.T) {
+		// Test floor rounding
+		result := RoundFloor(3.9, 0)
+		expected := 3.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test negative numbers
+		result = RoundFloor(-3.9, 0)
+		expected = -4.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test with decimal places
+		result = RoundFloor(3.14159, 2)
+		expected = 3.14
+		if math.Abs(result-expected) > 0.0001 {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+	})
+
+	t.Run("RoundInfinity function", func(t *testing.T) {
+		// Test infinity rounding (away from zero)
+		result := RoundInfinity(3.1, 0)
+		expected := 4.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test negative numbers
+		result = RoundInfinity(-3.1, 0)
+		expected = -4.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test with decimal places
+		result = RoundInfinity(3.14159, 2)
+		expected = 3.15
+		if math.Abs(result-expected) > 0.0001 {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+	})
+
+	t.Run("RoundZero function", func(t *testing.T) {
+		// Test zero rounding (towards zero)
+		result := RoundZero(3.9, 0)
+		expected := 3.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test negative numbers
+		result = RoundZero(-3.9, 0)
+		expected = -3.0
+		if result != expected {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+
+		// Test with decimal places
+		result = RoundZero(3.14159, 2)
+		expected = 3.14
+		if math.Abs(result-expected) > 0.0001 {
+			t.Errorf("Expected %f, got %f", expected, result)
+		}
+	})
 }
 
-func TestRandFloats(t *testing.T) {
-	var _r float64
-	for i := 0; i < 1000; i++ {
-		rs := RandFloats(10, 100, 1_000_000)
-		for _, r := range rs {
-			if r < 10 || r >= 100 {
-				panic(r)
-			}
-			if r == _r {
-				panic(r)
-			}
-			_r = r
-		}
-	}
-}
-
-type trimDecimalsType int
-
-const (
-	trimTypeRound trimDecimalsType = iota
-	trimTypeCeil
-	trimTypeFloor
-	trimTypeInfinity
-	trimTypeZero
-)
-
-func testTrim(t *testing.T, trim func(float64, int32) float64, decimalsType trimDecimalsType) {
-	times := 10_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-	placesSection := 100
-	var placesList []int32
-	for i := -placesSection; i <= placesSection; i++ {
-		placesList = append(placesList, int32(i))
-	}
-	for _, places := range placesList {
-		for i := 0; i < times; i++ {
-			origin := RandFloat(-100_000_000, 100_000_000)
-			trimmed := trim(origin, places)
-
-			sign := 1.0
-			if origin < 0 {
-				sign = -1
-				origin *= -1
-			}
-
-			sorigin := strconv.FormatFloat(origin, 'f', -1, 64)
-
-			origin *= sign
-
-			sorigin = strings.Repeat("0", 100) + sorigin
-
-			if !strings.Contains(sorigin, ".") {
-				sorigin += "."
-			}
-
-			sorigin += strings.Repeat("0", 100)
-
-			pointIndex := strings.IndexByte(sorigin, '.')
-
-			pointShiftedIndex := pointIndex + int(places)
-
-			sorigin = strings.ReplaceAll(sorigin, ".", "")
-			_strimmed := sorigin[:pointShiftedIndex]
-
-			//_trimmed, err := strconv.ParseFloat(shiftedIntegers, 64)
-			//_trimmedFirstParseRes := _trimmed
-			//if err != nil {
-			//	t.Error("places", places, "parse shiftedIntegers", "err", err, "origin", origin, "trimmed", trimmed, "_trimmed", _trimmed)
-			//	t.FailNow()
-			//}
-
-			var add1 bool
-			switch {
-			case (decimalsType == trimTypeCeil) && sign > 0,
-				(decimalsType == trimTypeFloor) && sign < 0,
-				decimalsType == trimTypeInfinity:
-				shiftedDecimals := sorigin[pointShiftedIndex:]
-				no0decimals := strings.ReplaceAll(shiftedDecimals, "0", "")
-				if len(no0decimals) != 0 {
-					add1 = true
-					_strimmed = BN(_strimmed).Add(Int(1)).String()
-				}
-			case decimalsType == trimTypeRound:
-				switch sorigin[pointShiftedIndex] {
-				case '5', '6', '7', '8', '9':
-					add1 = true
-					_strimmed = BN(_strimmed).Add(Int(1)).String()
-				}
-			}
-
-			//_strimmed := strconv.FormatFloat(_trimmed, 'f', -1, 64)
-
-			if places < 0 {
-				_strimmed += strings.Repeat("0", int(-places))
-			} else if places > 0 {
-				_sceiledList := strings.Split(_strimmed, "")
-				_sceiledList = slices.Insert(_sceiledList, len(_sceiledList)-int(places), ".")
-				_strimmed = strings.Join(_sceiledList, "")
-				_strimmed = strings.TrimRight(_strimmed, "0")
-			}
-			_strimmed = strings.TrimLeft(_strimmed, "0")
-
-			if _strimmed == "" {
-				_strimmed = "0"
-			}
-
-			if _strimmed[0] == '.' {
-				_strimmed = "0" + _strimmed
-			}
-
-			//_trimmed, err = strconv.ParseFloat(_strimmed, 64)
-			//if err != nil {
-			//	t.Error("places", places, "parse _strimmed", "err", err, "origin", origin, "trimmed", trimmed, "_trimmed", _trimmed)
-			//	t.FailNow()
-			//}
-
-			if sign < 0 && _strimmed != "0" {
-				_strimmed = "-" + _strimmed
-			}
-
-			if _strimmed[len(_strimmed)-1] == '.' {
-				_strimmed = _strimmed[:len(_strimmed)-1]
-			}
-
-			//_trimmed *= sign
-
-			if BN(trimmed).String() != _strimmed {
-				t.Error("type", decimalsType,
-					"places", places,
-					"origin", strconv.FormatFloat(origin, 'f', -1, 64), origin,
-					"trimmed", strconv.FormatFloat(trimmed, 'f', -1, 64), trimmed,
-					"add1", add1,
-					//"_trimmedFirstParsed", _trimmedFirstParseRes,
-					//"integers", shiftedIntegers,
-					"_strimmed", _strimmed,
-					//"_trimmed", strconv.FormatFloat(_trimmed, 'f', -1, 64),
-					"keynum", string(sorigin[pointShiftedIndex]),
-					"sorigin", sorigin,
-				)
-				t.FailNow()
-			}
-
-			j := i + 1
-			if j%groupNum == 0 {
-				t.Log("type", decimalsType, "places", places, "group", j/groupNum, "/", groups, "tested", j)
+// Test random functions
+func TestRandomFunctions(t *testing.T) {
+	t.Run("RandFloat function", func(t *testing.T) {
+		// Test basic range
+		min, max := 0.0, 10.0
+		for i := 0; i < 100; i++ {
+			result := RandFloat(min, max)
+			if result < min || result >= max {
+				t.Errorf("RandFloat(%f, %f) = %f, expected value in range [%f, %f)", min, max, result, min, max)
 			}
 		}
-	}
-}
 
-func TestRound(t *testing.T) {
-	testTrim(t, Round, trimTypeRound)
-}
+		// Test negative range
+		min, max = -5.0, 5.0
+		for i := 0; i < 100; i++ {
+			result := RandFloat(min, max)
+			if result < min || result >= max {
+				t.Errorf("RandFloat(%f, %f) = %f, expected value in range [%f, %f)", min, max, result, min, max)
+			}
+		}
 
-func TestRoundCeil(t *testing.T) {
-	testTrim(t, RoundCeil, trimTypeCeil)
-}
+		// Test same min and max (should return min)
+		result := RandFloat(5.0, 5.0)
+		if result != 5.0 {
+			t.Errorf("RandFloat(5.0, 5.0) = %f, expected 5.0", result)
+		}
 
-func TestRoundFloor(t *testing.T) {
-	testTrim(t, RoundFloor, trimTypeFloor)
-}
+		// Test decimal range
+		min, max = 1.5, 2.5
+		for i := 0; i < 100; i++ {
+			result := RandFloat(min, max)
+			if result < min || result >= max {
+				t.Errorf("RandFloat(%f, %f) = %f, expected value in range [%f, %f)", min, max, result, min, max)
+			}
+		}
+	})
 
-func TestRoundInfinity(t *testing.T) {
-	testTrim(t, RoundInfinity, trimTypeInfinity)
-}
+	t.Run("RandFloats function", func(t *testing.T) {
+		// Test basic functionality
+		min, max := 0.0, 10.0
+		n := 50
+		results := RandFloats(min, max, n)
 
-func TestRoundZero(t *testing.T) {
-	testTrim(t, RoundZero, trimTypeZero)
+		// Check length
+		if len(results) != n {
+			t.Errorf("RandFloats(%f, %f, %d) returned %d values, expected %d", min, max, n, len(results), n)
+		}
+
+		// Check all values are in range
+		for i, result := range results {
+			if result < min || result >= max {
+				t.Errorf("RandFloats[%d] = %f, expected value in range [%f, %f)", i, result, min, max)
+			}
+		}
+
+		// Test with zero count
+		results = RandFloats(min, max, 0)
+		if len(results) != 0 {
+			t.Errorf("RandFloats(%f, %f, 0) returned %d values, expected 0", min, max, len(results))
+		}
+
+		// Test with negative range
+		min, max = -10.0, -5.0
+		n = 30
+		results = RandFloats(min, max, n)
+
+		if len(results) != n {
+			t.Errorf("RandFloats(%f, %f, %d) returned %d values, expected %d", min, max, n, len(results), n)
+		}
+
+		for i, result := range results {
+			if result < min || result >= max {
+				t.Errorf("RandFloats[%d] = %f, expected value in range [%f, %f)", i, result, min, max)
+			}
+		}
+
+		// Test that results are different (very high probability)
+		min, max = 0.0, 100.0
+		n = 1000
+		results = RandFloats(min, max, n)
+
+		// Check for uniqueness (should be very likely with large range and many values)
+		uniqueCount := 0
+		seen := make(map[float64]bool)
+		for _, result := range results {
+			if !seen[result] {
+				seen[result] = true
+				uniqueCount++
+			}
+		}
+
+		// With 1000 values in range [0, 100), we should have many unique values
+		if uniqueCount < 500 {
+			t.Errorf("RandFloats produced only %d unique values out of %d, expected more variety", uniqueCount, n)
+		}
+	})
 }

@@ -2,6 +2,7 @@ package mathy
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -19,7 +20,25 @@ var (
 )
 
 type BigBaseNumber interface {
-	uint64 | int64 | int | float64 | string
+	~int64 | ~int | ~float64 | ~string | *Big
+}
+
+type NumberLike any
+
+func NumberLikeToBN(n NumberLike) *Big {
+	switch n := n.(type) {
+	case *Big:
+		return n
+	case int:
+		return newBNWithInt64(int64(n))
+	case int64:
+		return newBNWithInt64(int64(n))
+	case float64:
+		return newBNWithFloat64(n)
+	case string:
+		return newBNWithStrIgnoreErr(n)
+	}
+	panic("mathy: unknown type: " + fmt.Sprintf("%T", n))
 }
 
 // Big is a wrapper of github.com/shopspring/decimal,
@@ -46,6 +65,8 @@ func newBN[N BigBaseNumber](n N) *Big {
 		return newBNWithUint64(n)
 	case uint:
 		return newBNWithUint64(uint64(n))
+	case *Big:
+		return n
 	default:
 		return nil
 	}
@@ -112,30 +133,43 @@ func (b *Big) copy() *Big {
 	return &Big{d: b.d.Copy()}
 }
 
-func (b *Big) operateBig(n BNOperatee, f func(decimal.Decimal) decimal.Decimal) *Big {
-	return &Big{d: f(n.BN().d)}
+func (b *Big) operateBig(n NumberLike, f func(decimal.Decimal) decimal.Decimal) *Big {
+	switch n := n.(type) {
+	case *Big:
+		return &Big{d: f(n.d)}
+	case int:
+		return &Big{d: f(decimal.NewFromInt(int64(n)))}
+	case int64:
+		return &Big{d: f(decimal.NewFromInt(n))}
+	case float64:
+		return &Big{d: f(decimal.NewFromFloat(n))}
+	case string:
+		return &Big{d: f(newDecimalWithStrIgnoreErr(n))}
+	default:
+		panic("mathy: operateBig unknown type: " + fmt.Sprintf("%T", n))
+	}
 }
 
-func (b *Big) Add(n BNOperatee) *Big {
+func (b *Big) Add(n NumberLike) *Big {
 	return b.operateBig(n, b.d.Add)
 }
 
-func (b *Big) Sub(n BNOperatee) *Big {
+func (b *Big) Sub(n NumberLike) *Big {
 	return b.operateBig(n, b.d.Sub)
 }
 
-func (b *Big) Mul(n BNOperatee) *Big {
+func (b *Big) Mul(n NumberLike) *Big {
 	return b.operateBig(n, b.d.Mul)
 }
 
-func (b *Big) Div(n BNOperatee) *Big {
+func (b *Big) Div(n NumberLike) *Big {
 	return b.operateBig(n, b.d.Div)
 }
 
 // Pow input n must be integer, can be positive or negative
 // if n is not integer, will panic
-func (b *Big) Pow(n BNOperatee) *Big {
-	bn := n.BN()
+func (b *Big) Pow(n NumberLike) *Big {
+	bn := NumberLikeToBN(n)
 	if !bn.d.IsInteger() {
 		panic("mathy: Big.Pow input is not integer")
 	}
@@ -156,27 +190,27 @@ func (b *Big) Abs() *Big {
 	return &Big{d: b.d.Abs()}
 }
 
-func (b *Big) Cmp(n BNOperatee) int {
-	return b.d.Cmp(n.BN().d)
+func (b *Big) Cmp(n NumberLike) int {
+	return b.d.Cmp(NumberLikeToBN(n).d)
 }
 
-func (b *Big) Equal(n BNOperatee) bool {
+func (b *Big) Equal(n NumberLike) bool {
 	return b.Cmp(n) == 0
 }
 
-func (b *Big) Gt(n BNOperatee) bool {
+func (b *Big) Gt(n NumberLike) bool {
 	return b.Cmp(n) == 1
 }
 
-func (b *Big) Gte(n BNOperatee) bool {
+func (b *Big) Gte(n NumberLike) bool {
 	return b.Cmp(n) > -1
 }
 
-func (b *Big) Lt(n BNOperatee) bool {
+func (b *Big) Lt(n NumberLike) bool {
 	return b.Cmp(n) == -1
 }
 
-func (b *Big) Lte(n BNOperatee) bool {
+func (b *Big) Lte(n NumberLike) bool {
 	return b.Cmp(n) < 1
 }
 

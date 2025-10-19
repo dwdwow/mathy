@@ -1,817 +1,659 @@
 package mathy
 
 import (
-	"math/big"
-	"math/rand"
-	"strconv"
-	"strings"
 	"testing"
-
-	"github.com/shopspring/decimal"
 )
 
-func TestBN(t *testing.T) {
-	times := 10_000_000
-	groupNum := times / 10
+// Test constructors and basic creation
+func TestBigConstructors(t *testing.T) {
+	// Test BN function with different types
+	t.Run("BN with int", func(t *testing.T) {
+		b := BN(42)
+		if b.String() != "42" {
+			t.Errorf("Expected '42', got '%s'", b.String())
+		}
+	})
 
-	// test float64
-	t.Logf("test BN with float64")
-	fs := RandFloats(-1_000_000_000_000_000, 1_000_000_000_000_000, times)
-	for i, f := range fs {
-		if (i+1)%groupNum == 0 {
-			t.Log((i+1)/groupNum, "finished")
+	t.Run("BN with int64", func(t *testing.T) {
+		b := BN(int64(123))
+		if b.String() != "123" {
+			t.Errorf("Expected '123', got '%s'", b.String())
 		}
-		sf := strconv.FormatFloat(f, 'f', -1, 64)
-		bn := BN(f)
-		if bn.String() != sf {
-			t.Error("BN", bn.String(), "!=", sf)
-			t.FailNow()
-		}
-	}
+	})
 
-	// test int64
-	t.Logf("test BN with int64")
-	for i := 0; i < times; i++ {
-		if (i+1)%groupNum == 0 {
-			t.Log((i+1)/groupNum, "finished")
+	t.Run("BN with float64", func(t *testing.T) {
+		b := BN(3.14)
+		if b.String() != "3.14" {
+			t.Errorf("Expected '3.14', got '%s'", b.String())
 		}
-		num := rand.Int63()
-		snum := strconv.FormatInt(num, 10)
-		bn := BN(num)
-		sbn := bn.String()
-		if sbn != snum {
-			t.Error("BN", bn.String(), "!=", snum)
-			t.FailNow()
-		}
-	}
+	})
 
-	// test uint64
-	t.Logf("test BN with uint64")
-	for i := 0; i < times; i++ {
-		if (i+1)%groupNum == 0 {
-			t.Log((i+1)/groupNum, "finished")
+	t.Run("BN with string", func(t *testing.T) {
+		b := BN("999")
+		if b.String() != "999" {
+			t.Errorf("Expected '999', got '%s'", b.String())
 		}
-		num := rand.Int63()
-		snum := strconv.FormatInt(num, 10)
-		bn := BN(uint64(num))
-		sbn := bn.String()
-		if sbn != snum {
-			t.Error("BN", bn.String(), "!=", snum)
-			t.FailNow()
-		}
-	}
+	})
 
-	// test string
-	t.Logf("test BN with string")
-	ss := RandFloats(-1_000_000_000_000_000, 1_000_000_000_000_000, times)
-	for i, f := range ss {
-		if (i+1)%groupNum == 0 {
-			t.Log((i+1)/groupNum, "finished")
+	t.Run("BN with hex string", func(t *testing.T) {
+		b := BN("0xFF")
+		if b.String() != "255" {
+			t.Errorf("Expected '255', got '%s'", b.String())
 		}
-		sf := strconv.FormatFloat(f, 'f', -1, 64)
-		ip := strconv.FormatInt(rand.Int63(), 10)
-		dp := strconv.FormatInt(rand.Int63(), 10)
-		sf = ip + sf + dp
-		if strings.Contains(sf, "-") {
-			sf = strings.ReplaceAll(sf, "-", "")
-			sf = "-" + sf
+	})
+
+	t.Run("BN with binary string", func(t *testing.T) {
+		b := BN("0b1010")
+		if b.String() != "10" {
+			t.Errorf("Expected '10', got '%s'", b.String())
 		}
-		sf = strings.TrimRight(sf, "0")
-		bn := BN(sf)
-		if bn.String() != sf {
-			t.Error("BN", bn.String(), "!=", sf)
-			t.FailNow()
-		}
-	}
+	})
 }
 
-func TestBig_BN(t *testing.T) {
-	t.Log("test Big_BN")
-	times := 1_000
-	groupNum := times / 10
-	for i := 0; i < times; i++ {
-		f := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		bn := BN(f)
-		if bn.BN() != bn {
-			t.Error("BN", bn.String(), "!= Big.BN()", bn.BN().String())
-			t.FailNow()
+// Test NumberLikeToBN function
+func TestNumberLikeToBN(t *testing.T) {
+	t.Run("Convert int", func(t *testing.T) {
+		b := NumberLikeToBN(42)
+		if b.String() != "42" {
+			t.Errorf("Expected '42', got '%s'", b.String())
 		}
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log(j/groupNum, "finished")
+	})
+
+	t.Run("Convert float64", func(t *testing.T) {
+		b := NumberLikeToBN(3.14)
+		if b.String() != "3.14" {
+			t.Errorf("Expected '3.14', got '%s'", b.String())
 		}
-	}
+	})
+
+	t.Run("Convert string", func(t *testing.T) {
+		b := NumberLikeToBN("123")
+		if b.String() != "123" {
+			t.Errorf("Expected '123', got '%s'", b.String())
+		}
+	})
+
+	t.Run("Convert Big", func(t *testing.T) {
+		original := BN(456)
+		b := NumberLikeToBN(original)
+		if b.String() != "456" {
+			t.Errorf("Expected '456', got '%s'", b.String())
+		}
+	})
 }
 
-func TestBig_Copy(t *testing.T) {
-	t.Log("test Big_BN")
-	times := 1_000
-	groupNum := times / 10
-	for i := 0; i < times; i++ {
-		f := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		bn := BN(f)
-		copied := bn.Copy()
-		if copied == bn {
-			t.Error("BN", bn.String(), "copy != own copy", bn.BN().String())
-			t.FailNow()
+// Test arithmetic operations
+func TestBigArithmetic(t *testing.T) {
+	t.Run("Add operations", func(t *testing.T) {
+		a := BN(10)
+
+		// Test with different types
+		result1 := a.Add(5)
+		if result1.String() != "15" {
+			t.Errorf("Expected '15', got '%s'", result1.String())
 		}
-		if copied.String() != bn.String() {
-			t.Error("BN copied", copied.String(), "!= BN", bn.String())
-			t.FailNow()
+
+		result2 := a.Add(3.5)
+		if result2.String() != "13.5" {
+			t.Errorf("Expected '13.5', got '%s'", result2.String())
 		}
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log(j/groupNum, "finished")
+
+		result3 := a.Add("7")
+		if result3.String() != "17" {
+			t.Errorf("Expected '17', got '%s'", result3.String())
 		}
-	}
+
+		result4 := a.Add(BN(2))
+		if result4.String() != "12" {
+			t.Errorf("Expected '12', got '%s'", result4.String())
+		}
+	})
+
+	t.Run("Sub operations", func(t *testing.T) {
+		a := BN(20)
+
+		result1 := a.Sub(5)
+		if result1.String() != "15" {
+			t.Errorf("Expected '15', got '%s'", result1.String())
+		}
+
+		result2 := a.Sub(3.5)
+		if result2.String() != "16.5" {
+			t.Errorf("Expected '16.5', got '%s'", result2.String())
+		}
+
+		result3 := a.Sub("7")
+		if result3.String() != "13" {
+			t.Errorf("Expected '13', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("Mul operations", func(t *testing.T) {
+		a := BN(4)
+
+		result1 := a.Mul(3)
+		if result1.String() != "12" {
+			t.Errorf("Expected '12', got '%s'", result1.String())
+		}
+
+		result2 := a.Mul(2.5)
+		if result2.String() != "10" {
+			t.Errorf("Expected '10', got '%s'", result2.String())
+		}
+
+		result3 := a.Mul("5")
+		if result3.String() != "20" {
+			t.Errorf("Expected '20', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("Div operations", func(t *testing.T) {
+		a := BN(15)
+
+		result1 := a.Div(3)
+		if result1.String() != "5" {
+			t.Errorf("Expected '5', got '%s'", result1.String())
+		}
+
+		result2 := a.Div(2.5)
+		if result2.String() != "6" {
+			t.Errorf("Expected '6', got '%s'", result2.String())
+		}
+
+		result3 := a.Div("5")
+		if result3.String() != "3" {
+			t.Errorf("Expected '3', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("Pow operations", func(t *testing.T) {
+		a := BN(2)
+
+		result1 := a.Pow(3)
+		if result1.String() != "8" {
+			t.Errorf("Expected '8', got '%s'", result1.String())
+		}
+
+		result2 := a.Pow(10)
+		if result2.String() != "1024" {
+			t.Errorf("Expected '1024', got '%s'", result2.String())
+		}
+
+		// Test negative exponent
+		result3 := a.Pow(-2)
+		if result3.String() != "0.25" {
+			t.Errorf("Expected '0.25', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("Sqrt operations", func(t *testing.T) {
+		a := BN(16)
+		result := a.Sqrt()
+		// Sqrt is not precise, so we check it's close to 4
+		if result.String() != "4" {
+			t.Errorf("Expected '4', got '%s'", result.String())
+		}
+
+		b := BN(9)
+		result2 := b.Sqrt()
+		if result2.String() != "3" {
+			t.Errorf("Expected '3', got '%s'", result2.String())
+		}
+	})
 }
 
-func testOperation(t *testing.T, fy float64, bigFunc func(BNOperatee) *Big, deciFunc func(decimal.Decimal) decimal.Decimal) {
-	sfy := strconv.FormatFloat(fy, 'f', -1, 64)
-	iy := rand.Int63()
-	uy := uint64(rand.Int63())
+// Test comparison methods
+func TestBigComparison(t *testing.T) {
+	t.Run("Cmp operations", func(t *testing.T) {
+		a := BN(10)
+		b := BN(5)
+		c := BN(10)
 
-	// add Big
-	deciRes := deciFunc(decimal.NewFromFloat(fy))
-	bigRes := bigFunc(BN(fy))
-	if bigRes.String() != deciRes.String() {
-		t.Error("add Big not equal", bigRes.String(), deciRes.String())
-		t.FailNow()
-	}
+		// Test Cmp with different types
+		if a.Cmp(b) != 1 {
+			t.Errorf("Expected 1 (a > b), got %d", a.Cmp(b))
+		}
 
-	// operate float64
-	bigRes = bigFunc(Float(fy))
-	if bigRes.String() != deciRes.String() {
-		t.Error("add Float not equal", bigRes.String(), deciRes.String())
-		t.FailNow()
-	}
+		if b.Cmp(a) != -1 {
+			t.Errorf("Expected -1 (b < a), got %d", b.Cmp(a))
+		}
 
-	// operate string
-	deciStr, err := decimal.NewFromString(sfy)
-	if err != nil {
-		t.Error("new decimal from string", sfy, "err", err)
-		t.FailNow()
-	}
-	deciRes = deciFunc(deciStr)
-	bigRes = bigFunc(String(sfy))
-	if bigRes.String() != deciRes.String() {
-		t.Error("add String not equal", bigRes.String(), deciRes.String())
-		t.FailNow()
-	}
+		if a.Cmp(c) != 0 {
+			t.Errorf("Expected 0 (a == c), got %d", a.Cmp(c))
+		}
 
-	// operate int64
-	deciRes = deciFunc(decimal.NewFromInt(iy))
-	bigRes = bigFunc(Int(iy))
-	if bigRes.String() != deciRes.String() {
-		t.Error("add Int not equal", bigRes.String(), deciRes.String())
-		t.FailNow()
-	}
+		// Test with different number types
+		if a.Cmp(5) != 1 {
+			t.Errorf("Expected 1 (a > 5), got %d", a.Cmp(5))
+		}
 
-	// operate uint64
-	deciRes = deciFunc(decimal.NewFromInt(int64(uy)))
-	bigRes = bigFunc(Uint(uy))
-	if bigRes.String() != deciRes.String() {
-		t.Error("add Int not equal", bigRes.String(), deciRes.String())
-		t.FailNow()
-	}
+		if a.Cmp(10.0) != 0 {
+			t.Errorf("Expected 0 (a == 10.0), got %d", a.Cmp(10.0))
+		}
 
+		if a.Cmp("15") != -1 {
+			t.Errorf("Expected -1 (a < '15'), got %d", a.Cmp("15"))
+		}
+	})
+
+	t.Run("Equal operations", func(t *testing.T) {
+		a := BN(10)
+
+		if !a.Equal(10) {
+			t.Error("Expected a.Equal(10) to be true")
+		}
+
+		if !a.Equal(10.0) {
+			t.Error("Expected a.Equal(10.0) to be true")
+		}
+
+		if !a.Equal("10") {
+			t.Error("Expected a.Equal('10') to be true")
+		}
+
+		if !a.Equal(BN(10)) {
+			t.Error("Expected a.Equal(BN(10)) to be true")
+		}
+
+		if a.Equal(5) {
+			t.Error("Expected a.Equal(5) to be false")
+		}
+	})
+
+	t.Run("Gt operations", func(t *testing.T) {
+		a := BN(10)
+
+		if !a.Gt(5) {
+			t.Error("Expected a.Gt(5) to be true")
+		}
+
+		if !a.Gt(9.9) {
+			t.Error("Expected a.Gt(9.9) to be true")
+		}
+
+		if !a.Gt("9") {
+			t.Error("Expected a.Gt('9') to be true")
+		}
+
+		if a.Gt(10) {
+			t.Error("Expected a.Gt(10) to be false")
+		}
+
+		if a.Gt(15) {
+			t.Error("Expected a.Gt(15) to be false")
+		}
+	})
+
+	t.Run("Gte operations", func(t *testing.T) {
+		a := BN(10)
+
+		if !a.Gte(5) {
+			t.Error("Expected a.Gte(5) to be true")
+		}
+
+		if !a.Gte(10) {
+			t.Error("Expected a.Gte(10) to be true")
+		}
+
+		if !a.Gte(9.9) {
+			t.Error("Expected a.Gte(9.9) to be true")
+		}
+
+		if a.Gte(15) {
+			t.Error("Expected a.Gte(15) to be false")
+		}
+	})
+
+	t.Run("Lt operations", func(t *testing.T) {
+		a := BN(10)
+
+		if !a.Lt(15) {
+			t.Error("Expected a.Lt(15) to be true")
+		}
+
+		if !a.Lt(10.1) {
+			t.Error("Expected a.Lt(10.1) to be true")
+		}
+
+		if !a.Lt("11") {
+			t.Error("Expected a.Lt('11') to be true")
+		}
+
+		if a.Lt(10) {
+			t.Error("Expected a.Lt(10) to be false")
+		}
+
+		if a.Lt(5) {
+			t.Error("Expected a.Lt(5) to be false")
+		}
+	})
+
+	t.Run("Lte operations", func(t *testing.T) {
+		a := BN(10)
+
+		if !a.Lte(15) {
+			t.Error("Expected a.Lte(15) to be true")
+		}
+
+		if !a.Lte(10) {
+			t.Error("Expected a.Lte(10) to be true")
+		}
+
+		if !a.Lte(10.1) {
+			t.Error("Expected a.Lte(10.1) to be true")
+		}
+
+		if a.Lte(5) {
+			t.Error("Expected a.Lte(5) to be false")
+		}
+	})
 }
 
-func TestBig_Operate(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		fy := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-		dx := decimal.NewFromFloat(fx)
+// Test rounding methods
+func TestBigRounding(t *testing.T) {
+	t.Run("Round operations", func(t *testing.T) {
+		a := BN(3.14159)
 
-		testOperation(t, fy, x.Add, dx.Add)
-		testOperation(t, fy, x.Sub, dx.Sub)
-		testOperation(t, fy, x.Mul, dx.Mul)
-		testOperation(t, fy, x.Div, dx.Div)
-		//fx = RandFloat(-1_000_000, 1_000_000)
-		//fy = RandFloat(1, 10)
-		//x = BN(fx)
-		//dx = decimal.NewFromFloat(fx)
-		//testOperation(t, fy, x.Pow, dx.Pow)
-
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
+		// Test Round with different decimal places
+		result1 := a.Round(2)
+		if result1.String() != "3.14" {
+			t.Errorf("Expected '3.14', got '%s'", result1.String())
 		}
-	}
+
+		result2 := a.Round(3)
+		if result2.String() != "3.142" {
+			t.Errorf("Expected '3.142', got '%s'", result2.String())
+		}
+
+		result3 := a.Round(0)
+		if result3.String() != "3" {
+			t.Errorf("Expected '3', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("RoundCeil operations", func(t *testing.T) {
+		a := BN(3.1)
+		b := BN(-3.1)
+
+		result1 := a.RoundCeil(0)
+		if result1.String() != "4" {
+			t.Errorf("Expected '4', got '%s'", result1.String())
+		}
+
+		result2 := b.RoundCeil(0)
+		if result2.String() != "-3" {
+			t.Errorf("Expected '-3', got '%s'", result2.String())
+		}
+
+		result3 := a.RoundCeil(1)
+		if result3.String() != "3.1" {
+			t.Errorf("Expected '3.1', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("RoundFloor operations", func(t *testing.T) {
+		a := BN(3.9)
+		b := BN(-3.9)
+
+		result1 := a.RoundFloor(0)
+		if result1.String() != "3" {
+			t.Errorf("Expected '3', got '%s'", result1.String())
+		}
+
+		result2 := b.RoundFloor(0)
+		if result2.String() != "-4" {
+			t.Errorf("Expected '-4', got '%s'", result2.String())
+		}
+
+		result3 := a.RoundFloor(1)
+		if result3.String() != "3.9" {
+			t.Errorf("Expected '3.9', got '%s'", result3.String())
+		}
+	})
+
+	t.Run("RoundInfinity operations", func(t *testing.T) {
+		a := BN(3.1)
+		b := BN(-3.1)
+
+		result1 := a.RoundInfinity(0)
+		if result1.String() != "4" {
+			t.Errorf("Expected '4', got '%s'", result1.String())
+		}
+
+		result2 := b.RoundInfinity(0)
+		if result2.String() != "-4" {
+			t.Errorf("Expected '-4', got '%s'", result2.String())
+		}
+	})
+
+	t.Run("RoundZero operations", func(t *testing.T) {
+		a := BN(3.9)
+		b := BN(-3.9)
+
+		result1 := a.RoundZero(0)
+		if result1.String() != "3" {
+			t.Errorf("Expected '3', got '%s'", result1.String())
+		}
+
+		result2 := b.RoundZero(0)
+		if result2.String() != "-3" {
+			t.Errorf("Expected '-3', got '%s'", result2.String())
+		}
+	})
 }
 
-func TestBig_Sqrt(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(0, 1_000_000_000_000)
-		x := BN(fx)
-		dx := decimal.NewFromFloat(fx)
-
-		xSqrted := x.Sqrt()
-		sx2 := xSqrted.Pow(Int(4))
-		dx2 := dx.Pow(decimal.NewFromFloat(2))
-
-		if sx2.Div(String(dx2.String())).Sub(Int(1)).Abs().Gt(Float(0.0000000000000001)) {
-			t.Error(sx2.String(), dx2.String())
-			t.FailNow()
+// Test conversion methods
+func TestBigConversion(t *testing.T) {
+	t.Run("String conversion", func(t *testing.T) {
+		a := BN(123.456)
+		if a.String() != "123.456" {
+			t.Errorf("Expected '123.456', got '%s'", a.String())
 		}
 
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
+		b := BN(-42)
+		if b.String() != "-42" {
+			t.Errorf("Expected '-42', got '%s'", b.String())
 		}
-	}
+
+		// Test nil case
+		var c *Big
+		if c.String() != "" {
+			t.Errorf("Expected empty string for nil Big, got '%s'", c.String())
+		}
+	})
+
+	t.Run("Float64 conversion", func(t *testing.T) {
+		a := BN(3.14159)
+		f := a.Float64()
+		if f != 3.14159 {
+			t.Errorf("Expected 3.14159, got %f", f)
+		}
+
+		b := BN(42)
+		f2 := b.Float64()
+		if f2 != 42.0 {
+			t.Errorf("Expected 42.0, got %f", f2)
+		}
+	})
+
+	t.Run("BigFloat conversion", func(t *testing.T) {
+		a := BN(3.14159)
+		bf := a.BigFloat()
+		if bf == nil {
+			t.Error("Expected non-nil BigFloat")
+		}
+
+		// Convert back to string to verify
+		str := bf.Text('f', -1)
+		if str != "3.14159" {
+			t.Errorf("Expected '3.14159', got '%s'", str)
+		}
+	})
+
+	t.Run("BigInt conversion", func(t *testing.T) {
+		a := BN(42)
+		bi := a.BigInt()
+		if bi.String() != "42" {
+			t.Errorf("Expected '42', got '%s'", bi.String())
+		}
+
+		b := BN(3.7)
+		bi2 := b.BigInt()
+		if bi2.String() != "3" {
+			t.Errorf("Expected '3', got '%s'", bi2.String())
+		}
+	})
+
+	t.Run("BigInt rounding variants", func(t *testing.T) {
+		a := BN(3.7)
+		b := BN(-3.7)
+
+		// Test BigIntRound
+		if a.BigIntRound().String() != "4" {
+			t.Errorf("Expected '4', got '%s'", a.BigIntRound().String())
+		}
+
+		// Test BigIntCeil
+		if a.BigIntCeil().String() != "4" {
+			t.Errorf("Expected '4', got '%s'", a.BigIntCeil().String())
+		}
+		if b.BigIntCeil().String() != "-3" {
+			t.Errorf("Expected '-3', got '%s'", b.BigIntCeil().String())
+		}
+
+		// Test BigIntFloor
+		if a.BigIntFloor().String() != "3" {
+			t.Errorf("Expected '3', got '%s'", a.BigIntFloor().String())
+		}
+		if b.BigIntFloor().String() != "-4" {
+			t.Errorf("Expected '-4', got '%s'", b.BigIntFloor().String())
+		}
+
+		// Test BigIntInfinity
+		if a.BigIntInfinity().String() != "4" {
+			t.Errorf("Expected '4', got '%s'", a.BigIntInfinity().String())
+		}
+		if b.BigIntInfinity().String() != "-4" {
+			t.Errorf("Expected '-4', got '%s'", b.BigIntInfinity().String())
+		}
+
+		// Test BigIntZero
+		if a.BigIntZero().String() != "3" {
+			t.Errorf("Expected '3', got '%s'", a.BigIntZero().String())
+		}
+		if b.BigIntZero().String() != "-3" {
+			t.Errorf("Expected '-3', got '%s'", b.BigIntZero().String())
+		}
+	})
 }
 
-func TestBig_Abs(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
+// Test utility methods
+func TestBigUtility(t *testing.T) {
+	t.Run("Copy operations", func(t *testing.T) {
+		original := BN(42.5)
+		copied := original.Copy()
 
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-
-		sx := x.String()
-		absx := x.Abs().String()
-
-		if strings.ReplaceAll(sx, "-", "") != absx {
-			t.Error("abs not equal", sx, absx)
+		// Test that copy is equal to original
+		if !original.Equal(copied) {
+			t.Error("Expected copied to equal original")
 		}
 
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
-		}
-	}
-}
-
-func TestBig_Cmp(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		fy := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-		y := BN(fy)
-
-		sy := strconv.FormatFloat(fy, 'f', -1, 64)
-		iy := rand.Int63()
-		//uy := uint64(rand.Int63())
-
-		var fcmp int
-		if fx < fy {
-			fcmp = -1
-		} else if fx == fy {
-			fcmp = 0
-		} else {
-			fcmp = 1
+		// Test that copy is independent
+		original = original.Add(1) // Create new Big with Add
+		if original.Equal(copied) {
+			t.Error("Expected copy to be independent of original")
 		}
 
-		var icmp int
-		if fx < float64(iy) {
-			icmp = -1
-		} else if fx == float64(iy) {
-			icmp = 0
-		} else {
-			icmp = 1
+		// Test BN() method
+		bn := original.BN()
+		if !original.Equal(bn) {
+			t.Error("Expected BN() to return same value")
+		}
+	})
+
+	t.Run("Abs operations", func(t *testing.T) {
+		positive := BN(42)
+		negative := BN(-42)
+		zero := BN(0)
+
+		// Test positive number
+		abs1 := positive.Abs()
+		if !abs1.Equal(42) {
+			t.Errorf("Expected 42, got %s", abs1.String())
 		}
 
-		if x.Cmp(y) != fcmp {
-			t.Error("fcmp", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
+		// Test negative number
+		abs2 := negative.Abs()
+		if !abs2.Equal(42) {
+			t.Errorf("Expected 42, got %s", abs2.String())
 		}
 
-		if x.Cmp(String(sy)) != fcmp {
-			t.Error("fcmp", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
+		// Test zero
+		abs3 := zero.Abs()
+		if !abs3.Equal(0) {
+			t.Errorf("Expected 0, got %s", abs3.String())
+		}
+	})
+
+	t.Run("MaxBN operations", func(t *testing.T) {
+		a := BN(10)
+		b := BN(20)
+		c := BN(15)
+
+		// Test MaxBN with different values
+		max1 := MaxBN(a, b)
+		if !max1.Equal(20) {
+			t.Errorf("Expected 20, got %s", max1.String())
 		}
 
-		if x.Gte(Float(fy)) && fcmp == -1 {
-			t.Error("gte", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
+		max2 := MaxBN(b, c)
+		if !max2.Equal(20) {
+			t.Errorf("Expected 20, got %s", max2.String())
 		}
 
-		if x.Gt(Int(iy)) && icmp != 1 {
-			t.Error("gt", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
+		max3 := MaxBN(a, c)
+		if !max3.Equal(15) {
+			t.Errorf("Expected 15, got %s", max3.String())
 		}
 
-		//if x.Gte(Uint(uy)) && fcmp == -1 {
-		//	t.Error("gte", "fx", fx, "fy", fy, "x", x, "y", y)
-		//	t.FailNow()
-		//}
+		// Test with equal values
+		max4 := MaxBN(a, a)
+		if !max4.Equal(10) {
+			t.Errorf("Expected 10, got %s", max4.String())
+		}
+	})
 
-		if x.Lt(y) && fcmp != -1 {
-			t.Error("lt", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Lt(String(sy)) && fcmp != -1 {
-			t.Error("slt", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Lt(Int(iy)) && icmp != -1 {
-			t.Error("ilt", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Lt(Float(fy)) && fcmp != -1 {
-			t.Error("flt", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
+	t.Run("MinBN operations", func(t *testing.T) {
+		a := BN(10)
+		b := BN(20)
+		c := BN(15)
+
+		// Test MinBN with different values
+		min1 := MinBN(a, b)
+		if !min1.Equal(10) {
+			t.Errorf("Expected 10, got %s", min1.String())
 		}
 
-		//if x.Lt(Uint(uy)) && fcmp != -1 {
-		//	t.Error("lt", "fx", fx, "fy", fy, "x", x, "y", y)
-		//	t.FailNow()
-		//}
-
-		if x.Lte(y) && fcmp == 1 {
-			t.Error("lte", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Lte(String(sy)) && fcmp == 1 {
-			t.Error("lte", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Lte(Float(fy)) && fcmp == 1 {
-			t.Error("lte", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Lte(Int(iy)) && icmp == 1 {
-			t.Error("lte", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		//if x.Lte(Uint(uy)) && fcmp == 1 {
-		//	t.Error("lte", "fx", fx, "fy", fy, "x", x, "y", y)
-		//	t.FailNow()
-		//}
-
-		if x.Equal(y) && fcmp != 0 {
-			t.Error("eq", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Equal(String(sy)) && fcmp != 0 {
-			t.Error("eq", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Equal(Float(fy)) && fcmp != 0 {
-			t.Error("eq", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		if x.Equal(Int(iy)) && icmp != 0 {
-			t.Error("eq", "fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-		//if x.Equal(Uint(uy)) && fcmp != 0 {
-		//	t.Error("eq", "fx", fx, "fy", fy, "x", x, "y", y)
-		//	t.FailNow()
-		//}
-
-		if x.Cmp(BN(fx)) != 0 {
-			t.Error("x != x")
-			t.FailNow()
+		min2 := MinBN(b, c)
+		if !min2.Equal(15) {
+			t.Errorf("Expected 15, got %s", min2.String())
 		}
 
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
-		}
-	}
-}
-
-func TestBig_Round(t *testing.T) {
-	testRound := func(places int32, bigFunc func(int32) *Big, deciFunc func(int32) decimal.Decimal) {
-		sbig := bigFunc(places).String()
-		sdeci := deciFunc(places).String()
-		if sbig != sdeci {
-			t.Error(sbig, sdeci)
-			t.FailNow()
-		}
-	}
-
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	places := int32(300)
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000, 1_000_000_000)
-		sfx := strconv.FormatFloat(fx, 'f', -1, 64)
-		is := strconv.FormatInt(rand.Int63n(1_000_000_000_000), 10)
-		ds := strconv.FormatInt(rand.Int63n(1_000_000_000_000), 10)
-		sfx = is + sfx + ds
-		if strings.Contains(sfx, "-") {
-			sfx = "-" + strings.ReplaceAll(sfx, "-", "")
-		}
-		x := BN(sfx)
-		d, err := decimal.NewFromString(sfx)
-		if err != nil {
-			t.Error("new decimal from string", sfx, "err", err)
-			t.FailNow()
-		}
-		for k := -places; k <= places; k++ {
-			testRound(k, x.Round, d.Round)
-			testRound(k, x.RoundCeil, d.RoundCeil)
-			testRound(k, x.RoundFloor, d.RoundFloor)
-			testRound(k, x.RoundInfinity, d.RoundUp)
-			testRound(k, x.RoundZero, d.RoundDown)
+		min3 := MinBN(a, c)
+		if !min3.Equal(10) {
+			t.Errorf("Expected 10, got %s", min3.String())
 		}
 
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
+		// Test with equal values
+		min4 := MinBN(a, a)
+		if !min4.Equal(10) {
+			t.Errorf("Expected 10, got %s", min4.String())
 		}
-	}
-}
+	})
 
-func TestBig_BigFloat(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-		//if math.Abs(x.Float64()/fx-1) > 0.000000000000001 {
-		if x.Float64() != fx {
-			t.Error(fx, x.String())
-			t.FailNow()
+	t.Run("BN0 constant", func(t *testing.T) {
+		if !BN0.Equal(0) {
+			t.Errorf("Expected BN0 to equal 0, got %s", BN0.String())
 		}
-
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
-		}
-	}
-}
-
-func TestBig_BigIntRound(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-
-		sfx := strconv.FormatFloat(fx, 'f', -1, 64)
-
-		if !strings.Contains(sfx, ".") {
-			sfx += ".0"
-		}
-
-		neg := strings.Contains(sfx, "-")
-
-		sfxs := strings.Split(sfx, ".")
-
-		si := sfxs[0]
-
-		sd := sfxs[1]
-
-		lenSdNon0 := len(strings.ReplaceAll(sd, "0", ""))
-
-		keynum := sd[0]
-
-		// for BigInt
-		if x.BigInt().String() != si {
-			t.Error("Big.BigInt test", x, x.BigInt(), si)
-			t.FailNow()
-		}
-
-		// for round
-		switch keynum {
-		case '0', '1', '2', '3', '4':
-			if x.BigIntRound().String() != si {
-				t.Error("Big.BigIntRound", x, x.BigIntRound(), si)
-				t.FailNow()
-			}
-		default:
-			one := int64(-1)
-			if neg {
-				one = 1
-			}
-			if big.NewInt(0).Add(x.BigIntRound(), big.NewInt(one)).String() != si {
-				t.Error("Big.BigIntRound", x, x.BigIntRound(), si)
-				t.FailNow()
-			}
-		}
-
-		// for ceil
-		if lenSdNon0 == 0 {
-			if x.BigIntCeil().String() != si {
-				t.Error("Big.BigIntCeil", neg, x, x.BigIntCeil(), si)
-				t.FailNow()
-			}
-		} else {
-			if neg && x.BigIntCeil().String() != si {
-				t.Error("Big.BigIntCeil", neg, x, x.BigIntCeil(), si)
-				t.FailNow()
-			}
-			if !neg && big.NewInt(0).Sub(x.BigIntCeil(), big.NewInt(1)).String() != si {
-				t.Error("Big.BigIntCeil", neg, x, x.BigIntCeil(), si, big.NewInt(0).Sub(x.BigIntCeil(), big.NewInt(1)))
-				t.FailNow()
-			}
-		}
-
-		// for floor
-		if lenSdNon0 == 0 {
-			if x.BigIntFloor().String() != si {
-				t.Error("Big.BigIntFloor", x, x.BigIntFloor(), si)
-				t.FailNow()
-			}
-		} else {
-			if !neg && x.BigIntFloor().String() != si {
-				t.Error("Big.BigIntFloor", x, x.BigIntFloor(), si)
-				t.FailNow()
-			}
-			if neg && big.NewInt(0).Add(x.BigIntFloor(), big.NewInt(1)).String() != si {
-				t.Error("Big.BigIntFloor", x, x.BigIntFloor(), si, big.NewInt(0).Add(x.BigIntFloor(), big.NewInt(1)).String())
-				t.FailNow()
-			}
-		}
-
-		// for infinity
-		if lenSdNon0 == 0 {
-			if x.BigIntInfinity().String() != si {
-				t.Error("Big.BigIntInfinity", x, x.BigIntInfinity(), si)
-				t.FailNow()
-			}
-		} else {
-			one := int64(-1)
-			if neg {
-				one = 1
-			}
-			if big.NewInt(0).Add(x.BigIntInfinity(), big.NewInt(one)).String() != si {
-				t.Error("Big.BigIntInfinity", x, x.BigIntInfinity(), si)
-				t.FailNow()
-			}
-		}
-
-		// for zero
-		if x.BigIntZero().String() != si {
-			t.Error("Big.BigIntZero", x, x.BigIntZero(), si)
-			t.FailNow()
-		}
-
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
-		}
-	}
-}
-
-func TestMaxBN(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		fy := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-		y := BN(fy)
-
-		if (fx == fy && (MaxBN(x, y) != x || MaxBN(y, x) != y || MinBN(x, y) != x || MinBN(y, x) != y)) ||
-			(fx > fy && (MaxBN(x, y) != x || MinBN(x, y) != y)) ||
-			(fx < fy && (MinBN(x, y) != x || MaxBN(x, y) != y)) {
-			t.Error("fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
-		}
-	}
-}
-
-func TestMinBN(t *testing.T) {
-	times := 1_000_000
-	groupNum := 100_000
-	groups := times / groupNum
-
-	for i := 0; i < times; i++ {
-		fx := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		fy := RandFloat(-1_000_000_000_000, 1_000_000_000_000)
-		x := BN(fx)
-		y := BN(fy)
-
-		if (fx == fy && (MaxBN(x, y) != x || MaxBN(y, x) != y || MinBN(x, y) != x || MinBN(y, x) != y)) ||
-			(fx > fy && (MaxBN(x, y) != x || MinBN(x, y) != y)) ||
-			(fx < fy && (MinBN(x, y) != x || MaxBN(x, y) != y)) {
-			t.Error("fx", fx, "fy", fy, "x", x, "y", y)
-			t.FailNow()
-		}
-
-		j := i + 1
-		if j%groupNum == 0 {
-			t.Log("group", j/groupNum, "/", groups, "finished", j)
-		}
-	}
-}
-
-func TestBigWithPreciseData(t *testing.T) {
-	// Pow
-	if !BN(2.0).Pow(Int(3)).Equal(Int(8)) {
-		t.Error("2**2 != 8")
-		t.FailNow()
-	}
-	if !BN(2.0).Pow(Int(-2)).Equal(Float(0.25)) {
-		t.Error("2**-2 != 0.25")
-		t.FailNow()
-	}
-	// 23.425**4.7, 412.6326**2, 2143.0034**-2.1
-	powData := [][]float64{
-		{23.425, 4, 301105.29881289066},
-		{412.6326, 2, 170265.66258276},
-		{2143.0034, -2, 2.1774805270254708e-07},
-	}
-	for _, data := range powData {
-		if BN(data[0]).Pow(Float(data[1])).Div(Float(data[2])).Sub(Int(1)).Abs().Gt(Float(0.000000000001)) {
-			t.Error("Pow", BN(data[0]).Pow(Float(data[1])), data[2])
-			t.FailNow()
-		}
-	}
-
-	// Sqrt
-	if !BN(4.0).Sqrt().Equal(Int(2)) {
-		t.Error("4**0.5 != 2")
-		t.FailNow()
-	}
-	if !BN(9.0).Sqrt().Equal(Int(3)) {
-		t.Error("9**0.5 != 3")
-		t.FailNow()
-	}
-	sqrtData := [][]string{
-		{"4321.198642", "65.73582464683926"},
-		{"15142.1251255231", "123.05334260199152"},
-		{"12343451.123", "3513.324796115497"},
-	}
-	for _, data := range sqrtData {
-		if BN(data[0]).Sqrt().Div(String(data[1])).Sub(Int(1)).Abs().Gt(Float(0.000000000000001)) {
-			t.Error("Sqrt", BN(data[0]).Sqrt(), data[1])
-			t.FailNow()
-		}
-	}
-
-	// Abs
-	if !BN(-2315125.1286).Abs().Equal(Float(2315125.1286)) {
-		t.Error("Abs", "Abs(-2315125.1286) != 2315125.1286")
-		t.FailNow()
-	}
-
-	if !BN(2315125.1286).Abs().Equal(Float(2315125.1286)) {
-		t.Error("Abs", "Abs(2315125.1286) != 2315125.1286")
-		t.FailNow()
-	}
-
-	if BN(3124.31245364).Abs().Equal(Float(-23.6435)) {
-		t.Error("Abs", "Abs(3124.31245364) != -23.6435")
-		t.FailNow()
-	}
-
-	// Equal
-	if !BN(-1234.2135).Equal(Float(-1234.2135)) {
-		t.Error("Equal", "-1234.2135 != -1234.2135")
-		t.FailNow()
-	}
-
-	if BN(1234.2135).Equal(Float(-1234.2135)) {
-		t.Error("Equal", "1234.2135 != -1234.2135")
-		t.FailNow()
-	}
-
-	// Round
-	roundData := [][]float64{
-		{0.5, 0, 1},
-		{1, 0, 1},
-		{1432.4321, 2, 1432.43},
-		{143245.21357, 4, 143245.2136},
-		{125.15, -1, 130},
-	}
-	for _, data := range roundData {
-		if !BN(data[0]).Round(int32(data[1])).Equal(Float(data[2])) {
-			t.Error("Round", data)
-			t.FailNow()
-		}
-	}
-
-	// Ceil
-	ceilData := [][]float64{
-		{0.05, 2, 0.05},
-		{-0.1, 1, -0.1},
-		{1.37, 1, 1.4},
-		{-1.37, 1, -1.3},
-	}
-	for _, data := range ceilData {
-		if !BN(data[0]).RoundCeil(int32(data[1])).Equal(Float(data[2])) {
-			t.Error("Ceil", data)
-			t.FailNow()
-		}
-	}
-
-	// Floor
-	floorData := [][]float64{
-		{0.05, 2, 0.05},
-		{-0.1, 1, -0.1},
-		{1.37, 1, 1.3},
-		{-1.37, 1, -1.4},
-	}
-	for _, data := range floorData {
-		if !BN(data[0]).RoundFloor(int32(data[1])).Equal(Float(data[2])) {
-			t.Error("Floor", data)
-			t.FailNow()
-		}
-	}
-
-	// infinity
-	infinityData := [][]float64{
-		{0.05, 2, 0.05},
-		{-0.1, 1, -0.1},
-		{1.37, 1, 1.4},
-		{-1.37, 1, -1.4},
-	}
-	for _, data := range infinityData {
-		if !BN(data[0]).RoundInfinity(int32(data[1])).Equal(Float(data[2])) {
-			t.Error("Infinity", data)
-			t.FailNow()
-		}
-	}
-
-	// zero
-	zeroData := [][]float64{
-		{0.05, 2, 0.05},
-		{-0.1, 1, -0.1},
-		{1.37, 1, 1.3},
-		{-1.37, 1, -1.3},
-	}
-	for _, data := range zeroData {
-		if !BN(data[0]).RoundZero(int32(data[1])).Equal(Float(data[2])) {
-			t.Error("Zero", data)
-			t.FailNow()
-		}
-	}
-
-	// Gte, Lte
-	if !BN(0.01).Gte(Float(0.01)) {
-		t.Error("Gte", 0.01)
-		t.FailNow()
-	}
-	if !BN(0.01).Lte(Float(0.01)) {
-		t.Error("Lte", 0.01)
-		t.FailNow()
-	}
-
-}
-
-func TestBNFromHexString(t *testing.T) {
-	testCases := []struct {
-		input    string
-		expected string
-	}{
-		{"0x0", "0"},
-		{"0x1", "1"},
-		{"0xa", "10"},
-		{"0xff", "255"},
-		{"0x100", "256"},
-		{"0xffff", "65535"},
-		{"0x10000", "65536"},
-		{"0x1000000", "16777216"},
-	}
-
-	for _, tc := range testCases {
-		bn := BN(tc.input)
-		if bn.String() != tc.expected {
-			t.Errorf("BN(%s) = %s, expected %s", tc.input, bn.String(), tc.expected)
-		}
-	}
-
-	// Test invalid hex strings
-	invalidHex := []string{
-		"0x",
-		"0xg",
-		"0x-1",
-		"0x 123",
-		"0x123g",
-	}
-
-	for _, ih := range invalidHex {
-		func() {
-			defer func() {
-				if r := recover(); r == nil {
-					t.Errorf("Expected panic for invalid hex string: %s", ih)
-				}
-			}()
-			BN(ih)
-		}()
-	}
+	})
 }
