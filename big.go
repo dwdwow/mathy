@@ -1,8 +1,10 @@
 package mathy
 
 import (
+	"errors"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/shopspring/decimal"
 )
@@ -71,6 +73,13 @@ func newDecimalWithStrIgnoreErr(n string) decimal.Decimal {
 func newBigWithStr(n string) (*Big, error) {
 	if n == "" {
 		n = "0"
+	}
+	if strings.HasPrefix(n, "0x") || strings.HasPrefix(n, "0b") {
+		bigInt, ok := big.NewInt(0).SetString(n, 0)
+		if !ok {
+			return nil, errors.New("mathy: invalid hex or octal string")
+		}
+		return &Big{d: decimal.NewFromBigInt(bigInt, 0)}, nil
 	}
 	d, err := decimal.NewFromString(n)
 	if err != nil {

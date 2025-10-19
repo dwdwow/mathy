@@ -772,3 +772,46 @@ func TestBigWithPreciseData(t *testing.T) {
 	}
 
 }
+
+func TestBNFromHexString(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"0x0", "0"},
+		{"0x1", "1"},
+		{"0xa", "10"},
+		{"0xff", "255"},
+		{"0x100", "256"},
+		{"0xffff", "65535"},
+		{"0x10000", "65536"},
+		{"0x1000000", "16777216"},
+	}
+
+	for _, tc := range testCases {
+		bn := BN(tc.input)
+		if bn.String() != tc.expected {
+			t.Errorf("BN(%s) = %s, expected %s", tc.input, bn.String(), tc.expected)
+		}
+	}
+
+	// Test invalid hex strings
+	invalidHex := []string{
+		"0x",
+		"0xg",
+		"0x-1",
+		"0x 123",
+		"0x123g",
+	}
+
+	for _, ih := range invalidHex {
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("Expected panic for invalid hex string: %s", ih)
+				}
+			}()
+			BN(ih)
+		}()
+	}
+}
