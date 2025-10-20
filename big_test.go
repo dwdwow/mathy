@@ -239,24 +239,41 @@ func TestBigComparison(t *testing.T) {
 	t.Run("Equal operations", func(t *testing.T) {
 		a := BN(10)
 
-		if !a.Equal(10) {
+		if !a.Eq(10) {
 			t.Error("Expected a.Equal(10) to be true")
 		}
 
-		if !a.Equal(10.0) {
+		if !a.Eq(10.0) {
 			t.Error("Expected a.Equal(10.0) to be true")
 		}
 
-		if !a.Equal("10") {
+		if !a.Eq("10") {
 			t.Error("Expected a.Equal('10') to be true")
 		}
 
-		if !a.Equal(BN(10)) {
+		if !a.Eq(BN(10)) {
 			t.Error("Expected a.Equal(BN(10)) to be true")
 		}
 
-		if a.Equal(5) {
+		if a.Eq(5) {
 			t.Error("Expected a.Equal(5) to be false")
+		}
+	})
+
+	t.Run("NotEqual operations", func(t *testing.T) {
+		a := BN(10)
+
+		if !a.NotEq(5) {
+			t.Error("Expected a.NotEq(5) to be true")
+		}
+	})
+
+	t.Run("IsOpposite operations", func(t *testing.T) {
+		a := BN(10)
+		b := BN(-10)
+
+		if !a.IsOpposite(b) {
+			t.Error("Expected a.IsOpposite(b) to be true")
 		}
 	})
 
@@ -554,19 +571,19 @@ func TestBigUtility(t *testing.T) {
 		copied := original.Copy()
 
 		// Test that copy is equal to original
-		if !original.Equal(copied) {
+		if !original.Eq(copied) {
 			t.Error("Expected copied to equal original")
 		}
 
 		// Test that copy is independent
 		original = original.Add(1) // Create new Big with Add
-		if original.Equal(copied) {
+		if original.Eq(copied) {
 			t.Error("Expected copy to be independent of original")
 		}
 
 		// Test BN() method
 		bn := original.BN()
-		if !original.Equal(bn) {
+		if !original.Eq(bn) {
 			t.Error("Expected BN() to return same value")
 		}
 	})
@@ -578,19 +595,19 @@ func TestBigUtility(t *testing.T) {
 
 		// Test positive number
 		abs1 := positive.Abs()
-		if !abs1.Equal(42) {
+		if !abs1.Eq(42) {
 			t.Errorf("Expected 42, got %s", abs1.String())
 		}
 
 		// Test negative number
 		abs2 := negative.Abs()
-		if !abs2.Equal(42) {
+		if !abs2.Eq(42) {
 			t.Errorf("Expected 42, got %s", abs2.String())
 		}
 
 		// Test zero
 		abs3 := zero.Abs()
-		if !abs3.Equal(0) {
+		if !abs3.Eq(0) {
 			t.Errorf("Expected 0, got %s", abs3.String())
 		}
 	})
@@ -602,23 +619,23 @@ func TestBigUtility(t *testing.T) {
 
 		// Test MaxBN with different values
 		max1 := MaxBN(a, b)
-		if !max1.Equal(20) {
+		if !max1.Eq(20) {
 			t.Errorf("Expected 20, got %s", max1.String())
 		}
 
 		max2 := MaxBN(b, c)
-		if !max2.Equal(20) {
+		if !max2.Eq(20) {
 			t.Errorf("Expected 20, got %s", max2.String())
 		}
 
 		max3 := MaxBN(a, c)
-		if !max3.Equal(15) {
+		if !max3.Eq(15) {
 			t.Errorf("Expected 15, got %s", max3.String())
 		}
 
 		// Test with equal values
 		max4 := MaxBN(a, a)
-		if !max4.Equal(10) {
+		if !max4.Eq(10) {
 			t.Errorf("Expected 10, got %s", max4.String())
 		}
 	})
@@ -630,29 +647,29 @@ func TestBigUtility(t *testing.T) {
 
 		// Test MinBN with different values
 		min1 := MinBN(a, b)
-		if !min1.Equal(10) {
+		if !min1.Eq(10) {
 			t.Errorf("Expected 10, got %s", min1.String())
 		}
 
 		min2 := MinBN(b, c)
-		if !min2.Equal(15) {
+		if !min2.Eq(15) {
 			t.Errorf("Expected 15, got %s", min2.String())
 		}
 
 		min3 := MinBN(a, c)
-		if !min3.Equal(10) {
+		if !min3.Eq(10) {
 			t.Errorf("Expected 10, got %s", min3.String())
 		}
 
 		// Test with equal values
 		min4 := MinBN(a, a)
-		if !min4.Equal(10) {
+		if !min4.Eq(10) {
 			t.Errorf("Expected 10, got %s", min4.String())
 		}
 	})
 
 	t.Run("BN0 constant", func(t *testing.T) {
-		if !BN0.Equal(0) {
+		if !BN0.Eq(0) {
 			t.Errorf("Expected BN0 to equal 0, got %s", BN0.String())
 		}
 	})

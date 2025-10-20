@@ -194,8 +194,17 @@ func (b *Big) Cmp(n NumberLike) int {
 	return b.d.Cmp(NumberLikeToBN(n).d)
 }
 
-func (b *Big) Equal(n NumberLike) bool {
+func (b *Big) Eq(n NumberLike) bool {
 	return b.Cmp(n) == 0
+}
+
+func (b *Big) NotEq(n NumberLike) bool {
+	return b.Cmp(n) != 0
+}
+
+// IsOpposite returns true if n is the opposite number of b
+func (b *Big) IsOpposite(n NumberLike) bool {
+	return b.Add(n).Eq(BN(0))
 }
 
 func (b *Big) Gt(n NumberLike) bool {
