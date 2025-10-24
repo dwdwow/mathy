@@ -16,7 +16,9 @@ func init() {
 }
 
 var (
-	BN0 = newBNWithInt64(0)
+	BN0  = newBNWithInt64(0)
+	BN2  = newBNWithInt64(2)
+	BN10 = newBNWithInt64(10)
 )
 
 type BigBaseNumber interface {
